@@ -1,32 +1,56 @@
 import { useState } from 'react'
-import { ArrowLeft, Star, Send, Loader } from 'lucide-react'
+import {
+  ArrowLeft,
+  Star,
+  Send,
+  Loader,
+  ShoppingCart,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  Edit3,
+  Trash2,
+  X,
+} from 'lucide-react'
 import FavoriteButton from '../common/FavoriteButton'
-import { useReviews, useCreateReview } from '../../hooks/useReviews'
+import ShareButton from '../common/ShareButton'
+import { useReviews, useCreateReview, useUpdateReview, useDeleteReview } from '../../hooks/useReviews'
 import { getUserIdentifier } from '../../services/userService'
 import { formatPrice, averageRating } from '../../utils/helpers'
+import ConfirmModal from '../modals/ConfirmModal'
 
 /**
  * Full-screen product detail view.
- *
- * @param {Object}   props
- * @param {Object}   props.gun       — product data
- * @param {Function} props.onBack    — return to catalog
- * @param {Function} [props.onEdit]  — navigate to edit page
- * @param {Function} [props.onDelete]— trigger delete flow
+ * Includes: share, cart, favorite, review CRUD, thumbs up/down.
  */
-export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
+export default function GunDetail({ gun, onBack, onEdit, onDelete, onAddToCart, isInCart }) {
   const imgSrc = gun.image_url || gun.image || '/guns/pistol.svg'
   const category = gun.type || gun.category || '—'
   const caliber = gun.caliber || gun.difficulty || ''
   const price = gun.price ?? gun.cook_time ?? 0
+  const currentUser = getUserIdentifier()
 
   // Reviews
-  const { reviews, loading: reviewsLoading, refetch: refetchReviews } = useReviews(gun.id)
+  const { reviews, loading: reviewsLoading, voteReview, refetch: refetchReviews } = useReviews(gun.id)
   const { createReview, loading: submitting } = useCreateReview()
+  const { updateReview, loading: updating } = useUpdateReview()
+  const { deleteReview, loading: delReviewLoading } = useDeleteReview()
+
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [reviewError, setReviewError] = useState('')
   const [reviewSuccess, setReviewSuccess] = useState('')
+
+  // Edit review state
+  const [editingReview, setEditingReview] = useState(null)
+  const [editRating, setEditRating] = useState(5)
+  const [editComment, setEditComment] = useState('')
+
+  // Delete review confirm
+  const [deleteReviewTarget, setDeleteReviewTarget] = useState(null)
+
+  // Cart feedback
+  const [cartAdded, setCartAdded] = useState(false)
 
   const avgRating = gun.average_rating || averageRating(reviews)
   const reviewCount = gun.review_count ?? reviews.length
@@ -35,26 +59,72 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
     e.preventDefault()
     setReviewError('')
     setReviewSuccess('')
-
     if (rating < 1 || rating > 5) {
       setReviewError('Rating must be between 1 and 5.')
       return
     }
-
     const result = await createReview(gun.id, {
-      user_identifier: getUserIdentifier(),
+      user_identifier: currentUser,
       rating,
       comment: comment.trim(),
     })
-
     if (result) {
       setReviewSuccess('Review submitted!')
       setComment('')
       setRating(5)
       refetchReviews()
+      setTimeout(() => setReviewSuccess(''), 3000)
     } else {
       setReviewError('Could not submit review. The server may be unavailable.')
     }
+  }
+
+  const handleStartEdit = (rev) => {
+    setEditingReview(rev.id)
+    setEditRating(rev.rating)
+    setEditComment(rev.comment || '')
+  }
+
+  const handleCancelEdit = () => {
+    setEditingReview(null)
+    setEditRating(5)
+    setEditComment('')
+  }
+
+  const handleSaveEdit = async (reviewId) => {
+    const result = await updateReview(reviewId, {
+      rating: editRating,
+      comment: editComment.trim(),
+    })
+    if (result) {
+      setEditingReview(null)
+      refetchReviews()
+    }
+  }
+
+  const handleConfirmDeleteReview = async () => {
+    if (!deleteReviewTarget) return
+    const ok = await deleteReview(deleteReviewTarget)
+    if (ok) {
+      setDeleteReviewTarget(null)
+      refetchReviews()
+    }
+  }
+
+  const handleAddToCart = () => {
+    if (onAddToCart) {
+      onAddToCart(gun)
+      setCartAdded(true)
+      setTimeout(() => setCartAdded(false), 2000)
+    }
+  }
+
+  const isOwner = (rev) => {
+    const revUser = rev.user_id || rev.user_identifier || ''
+    return (
+      String(revUser) === String(currentUser) ||
+      String(revUser).includes(String(currentUser).substring(0, 8))
+    )
   }
 
   return (
@@ -66,7 +136,7 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
 
       {/* Hero */}
       <div className="detail-hero">
-        <img className="detail-img" src={imgSrc} alt={gun.name} />
+        <img className="detail-img" src={imgSrc} alt={gun.name} loading="lazy" />
         <div className="detail-info">
           <h1 className="display">{gun.name}</h1>
           <p className="type">
@@ -74,16 +144,28 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
             {caliber ? ` · ${caliber}` : ''}
           </p>
           <p className="price detail-price">{formatPrice(price)}</p>
-
           {avgRating > 0 && (
             <p className="detail-rating">
               <Star size={16} fill="var(--brass)" stroke="var(--brass)" />
               {avgRating.toFixed(1)} ({reviewCount} review{reviewCount !== 1 ? 's' : ''})
             </p>
           )}
-
           <div className="detail-actions">
             <FavoriteButton gunId={gun.id || gun.name} />
+            <ShareButton gun={gun} />
+            {onAddToCart && (
+              <button
+                type="button"
+                className={`btn ${isInCart || cartAdded ? 'btn--outline' : 'btn--primary'} btn--sm`}
+                onClick={handleAddToCart}
+              >
+                {isInCart || cartAdded ? (
+                  <><Check size={16} /> In Cart</>
+                ) : (
+                  <><ShoppingCart size={16} /> Add to Cart</>
+                )}
+              </button>
+            )}
             {onEdit && (
               <button type="button" className="btn btn--outline" onClick={() => onEdit(gun)}>
                 Edit
@@ -104,7 +186,7 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
         <p>{gun.description || 'No description available.'}</p>
       </section>
 
-      {/* Specifications (from ingredients / steps if present) */}
+      {/* Specifications */}
       {gun.ingredients && gun.ingredients.length > 0 && (
         <section className="detail-section">
           <h2>Specifications</h2>
@@ -118,14 +200,13 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
         </section>
       )}
 
+      {/* Steps */}
       {gun.steps && gun.steps.length > 0 && (
         <section className="detail-section">
           <h2>Assembly / Maintenance Steps</h2>
           <ol className="detail-steps">
             {gun.steps.map((step, i) => (
-              <li key={step.id || i}>
-                {step.instruction || step}
-              </li>
+              <li key={step.id || i}>{step.instruction || step}</li>
             ))}
           </ol>
         </section>
@@ -135,7 +216,7 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
       <section className="detail-section">
         <h2>Reviews</h2>
 
-        {/* Submit review */}
+        {/* Submit new review */}
         <form className="review-form" onSubmit={handleSubmitReview}>
           <div className="review-stars">
             {[1, 2, 3, 4, 5].map((n) => (
@@ -154,7 +235,6 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
               </button>
             ))}
           </div>
-
           <textarea
             className="review-input"
             rows="3"
@@ -163,7 +243,6 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
             onChange={(e) => setComment(e.target.value)}
             maxLength={500}
           />
-
           <button
             type="submit"
             className="btn btn--primary"
@@ -175,7 +254,6 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
               <><Send size={16} /> Submit Review</>
             )}
           </button>
-
           {reviewError && <p className="form-error">{reviewError}</p>}
           {reviewSuccess && <p className="form-success">{reviewSuccess}</p>}
           {!gun.id && (
@@ -192,20 +270,112 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
           <ul className="review-list">
             {reviews.map((rev) => (
               <li key={rev.id} className="review-item">
-                <div className="review-head">
-                  <span className="review-user">{rev.user_identifier || 'Anonymous'}</span>
-                  <span className="review-stars-display">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        fill={i < rev.rating ? 'var(--brass)' : 'none'}
-                        stroke={i < rev.rating ? 'var(--brass)' : 'var(--line)'}
-                      />
-                    ))}
-                  </span>
-                </div>
-                {rev.comment && <p className="review-comment">{rev.comment}</p>}
+                {editingReview === rev.id ? (
+                  /* ---- Editing mode ---- */
+                  <div className="review-edit-form">
+                    <div className="review-stars">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          className="star-btn"
+                          onClick={() => setEditRating(n)}
+                        >
+                          <Star
+                            size={18}
+                            fill={n <= editRating ? 'var(--brass)' : 'none'}
+                            stroke={n <= editRating ? 'var(--brass)' : 'var(--steel)'}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      className="review-input"
+                      rows="2"
+                      value={editComment}
+                      onChange={(e) => setEditComment(e.target.value)}
+                      maxLength={500}
+                    />
+                    <div className="review-edit-actions">
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--sm"
+                        onClick={() => handleSaveEdit(rev.id)}
+                        disabled={updating}
+                      >
+                        {updating ? 'Saving…' : 'Save'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--outline btn--sm"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ---- Display mode ---- */
+                  <>
+                    <div className="review-head">
+                      <span className="review-user">{rev.user_identifier || 'Anonymous'}</span>
+                      <span className="review-stars-display">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            size={14}
+                            fill={i < rev.rating ? 'var(--brass)' : 'none'}
+                            stroke={i < rev.rating ? 'var(--brass)' : 'var(--line)'}
+                          />
+                        ))}
+                      </span>
+                    </div>
+                    {rev.comment && <p className="review-comment">{rev.comment}</p>}
+
+                    {/* Thumbs + CRUD actions */}
+                    <div className="review-bottom">
+                      <div className="review-thumbs">
+                        <button
+                          type="button"
+                          className={`thumb-btn${rev.user_vote === 'up' ? ' thumb-btn--active' : ''}`}
+                          onClick={() => voteReview(rev.id, 'up')}
+                          title="Helpful"
+                        >
+                          <ThumbsUp size={14} /> <span>{rev.thumbs_up || 0}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`thumb-btn thumb-btn--down${rev.user_vote === 'down' ? ' thumb-btn--active' : ''}`}
+                          onClick={() => voteReview(rev.id, 'down')}
+                          title="Not helpful"
+                        >
+                          <ThumbsDown size={14} /> <span>{rev.thumbs_down || 0}</span>
+                        </button>
+                      </div>
+
+                      {isOwner(rev) && (
+                        <div className="review-crud">
+                          <button
+                            type="button"
+                            className="review-crud-btn"
+                            onClick={() => handleStartEdit(rev)}
+                            title="Edit review"
+                          >
+                            <Edit3 size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            className="review-crud-btn review-crud-btn--danger"
+                            onClick={() => setDeleteReviewTarget(rev.id)}
+                            title="Delete review"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -213,6 +383,18 @@ export default function GunDetail({ gun, onBack, onEdit, onDelete }) {
           <p className="detail-empty">No reviews yet. Be the first!</p>
         )}
       </section>
+
+      {/* Delete review confirmation */}
+      <ConfirmModal
+        open={Boolean(deleteReviewTarget)}
+        title="Delete Review"
+        message="Are you sure you want to delete this review?"
+        confirmLabel="Delete"
+        danger
+        loading={delReviewLoading}
+        onConfirm={handleConfirmDeleteReview}
+        onCancel={() => setDeleteReviewTarget(null)}
+      />
     </div>
   )
 }

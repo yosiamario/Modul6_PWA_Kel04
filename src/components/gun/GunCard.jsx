@@ -1,16 +1,13 @@
 import FavoriteButton from '../common/FavoriteButton'
+import ShareButton from '../common/ShareButton'
 import { formatPrice, truncate } from '../../utils/helpers'
+import { ShoppingCart, Check } from 'lucide-react'
 
 /**
  * Product card used in the catalog grid.
- *
- * @param {Object}   props
- * @param {Object}   props.gun       — product data
- * @param {Function} props.onSelect  — called with the gun when clicked
- * @param {Function} [props.onEdit]  — called when Edit is clicked (admin)
- * @param {Function} [props.onDelete]— called when Delete is clicked (admin)
+ * Now includes Share link button and Add-to-Cart button.
  */
-export default function GunCard({ gun, onSelect, onEdit, onDelete }) {
+export default function GunCard({ gun, onSelect, onEdit, onDelete, onAddToCart, isInCart }) {
   const imgSrc = gun.image_url || gun.image || '/guns/pistol.svg'
   const category = gun.type || gun.category || '—'
   const caliber = gun.caliber || gun.difficulty || ''
@@ -32,25 +29,35 @@ export default function GunCard({ gun, onSelect, onEdit, onDelete }) {
           height="180"
           loading="lazy"
         />
-
         <span className="name display">{gun.name}</span>
-
         <span className="type">
           {category}
           {caliber ? ` · ${caliber}` : ''}
         </span>
-
         {gun.description && (
           <span className="card-desc">{truncate(gun.description, 72)}</span>
         )}
-
         <span className="price">{formatPrice(price)}</span>
       </button>
 
       {/* Floating actions row */}
       <div className="card-actions">
         <FavoriteButton gunId={gun.id || gun.name} />
-
+        <ShareButton gun={gun} size={15} />
+        {onAddToCart && (
+          <button
+            type="button"
+            className={`card-act-btn${isInCart ? ' card-act-btn--in-cart' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onAddToCart(gun)
+            }}
+            aria-label={isInCart ? 'Already in cart' : `Add ${gun.name} to cart`}
+            title={isInCart ? 'In cart' : 'Add to cart'}
+          >
+            {isInCart ? <Check size={14} /> : <ShoppingCart size={14} />}
+          </button>
+        )}
         {onEdit && (
           <button
             type="button"
@@ -62,7 +69,6 @@ export default function GunCard({ gun, onSelect, onEdit, onDelete }) {
             ✏️
           </button>
         )}
-
         {onDelete && (
           <button
             type="button"

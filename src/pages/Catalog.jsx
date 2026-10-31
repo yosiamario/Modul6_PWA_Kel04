@@ -18,12 +18,12 @@ import {
  * Catalog page — the main product listing.
  *
  * Data source priority:
- *   1. Live API via useGuns()
- *   2. Local static array (GUNS_LOCAL) when the API is unreachable
+ * 1. Live API via useGuns()
+ * 2. Local static array (GUNS_LOCAL) when the API is unreachable
  *
- * Features: search, category filter, sort, CRUD actions, detail modal.
+ * Features: search, category filter, sort, CRUD actions, detail modal, cart.
  */
-export default function Catalog({ onNavigate }) {
+export default function Catalog({ onNavigate, cart }) {
   // ---- API data ----
   const { guns: apiGuns, loading, error, refetch } = useGuns({ limit: 50 })
   const [useLocal, setUseLocal] = useState(false)
@@ -31,7 +31,6 @@ export default function Catalog({ onNavigate }) {
   // Decide data source
   const rawGuns = useMemo(() => {
     if (useLocal || (error && apiGuns.length === 0)) {
-      // Enrich local data with synthetic ids so FavoriteButton and detail work
       return GUNS_LOCAL.map((g, i) => ({ ...g, id: g.id || `local-${i}` }))
     }
     return apiGuns
@@ -83,6 +82,8 @@ export default function Catalog({ onNavigate }) {
         onBack={() => setSelectedGun(null)}
         onEdit={(g) => onNavigate && onNavigate('Edit', g)}
         onDelete={(g) => { setSelectedGun(null); setDeleteTarget(g) }}
+        onAddToCart={cart ? cart.addToCart : undefined}
+        isInCart={cart ? cart.isInCart(selectedGun.id || selectedGun.name) : false}
       />
     )
   }
@@ -145,11 +146,7 @@ export default function Catalog({ onNavigate }) {
               <button type="button" className="btn btn--outline" onClick={refetch}>
                 <RefreshCw size={16} /> Retry
               </button>
-              <button
-                type="button"
-                className="btn btn--outline"
-                onClick={() => setUseLocal(true)}
-              >
+              <button type="button" className="btn btn--outline" onClick={() => setUseLocal(true)}>
                 View Local Catalog
               </button>
             </div>
@@ -173,6 +170,8 @@ export default function Catalog({ onNavigate }) {
                 onSelect={setSelectedGun}
                 onEdit={onNavigate ? (g) => onNavigate('Edit', g) : undefined}
                 onDelete={setDeleteTarget}
+                onAddToCart={cart ? cart.addToCart : undefined}
+                isInCart={cart ? cart.isInCart(gun.id || gun.name) : false}
               />
             ))}
           </ul>
@@ -203,9 +202,7 @@ export default function Catalog({ onNavigate }) {
         onConfirm={handleDelete}
         onCancel={() => { setDeleteTarget(null); setDeleteError('') }}
       />
-      {deleteError && (
-        <div className="toast toast--error">{deleteError}</div>
-      )}
+      {deleteError && <div className="toast toast--error">{deleteError}</div>}
     </>
   )
 }

@@ -1518,3 +1518,448 @@
     transform: translateY(0);
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Share Button
+ * --------------------------------------------------------------------------- */
+.share-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--steel);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.15s ease;
+}
+.share-btn:hover {
+  transform: scale(1.1);
+  border-color: var(--brass);
+  color: var(--brass);
+}
+.share-btn--copied {
+  color: #27ae60;
+  border-color: #27ae60;
+}
+
+/* ---------------------------------------------------------------------------
+ * Header — Cart Button & Right Group
+ * --------------------------------------------------------------------------- */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-cart-btn {
+  position: relative;
+}
+.header-cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--brass);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Card in-cart indicator */
+.card-act-btn--in-cart {
+  background: var(--brass);
+  color: #fff;
+  border-color: var(--brass);
+}
+
+/* ---------------------------------------------------------------------------
+ * Cart Drawer
+ * --------------------------------------------------------------------------- */
+.cart-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 34, 44, 0.5);
+  backdrop-filter: blur(3px);
+  z-index: 80;
+  display: flex;
+  justify-content: flex-end;
+}
+.cart-drawer {
+  width: 100%;
+  max-width: 420px;
+  height: 100%;
+  background: #fff;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  animation: cartSlideIn 0.25s ease-out;
+}
+@keyframes cartSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.cart-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+.cart-header-count {
+  color: var(--steel);
+  font-weight: 400;
+}
+.cart-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+  color: var(--steel);
+}
+.cart-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.cart-item-img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.cart-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cart-item-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cart-item-meta {
+  font-size: 0.78rem;
+  color: var(--steel);
+}
+.cart-item-price {
+  font-weight: 700;
+  color: var(--brass);
+  font-size: 0.9rem;
+}
+.cart-item-qty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qty-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ink);
+}
+.qty-btn:hover {
+  border-color: var(--brass);
+}
+.qty-val {
+  font-weight: 600;
+  font-size: 0.92rem;
+  min-width: 20px;
+  text-align: center;
+}
+.cart-item-remove {
+  background: none;
+  border: none;
+  color: #c0392b;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.cart-item-remove:hover {
+  color: #a93226;
+}
+.cart-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.cart-checkout-btn {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+ * Review Thumbs & CRUD
+ * --------------------------------------------------------------------------- */
+.review-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.review-thumbs {
+  display: flex;
+  gap: 10px;
+}
+.thumb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--steel);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.thumb-btn:hover {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+.thumb-btn--active {
+  background: var(--brass);
+  color: #fff;
+  border-color: var(--brass);
+}
+.thumb-btn--down.thumb-btn--active {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+.review-crud {
+  display: flex;
+  gap: 6px;
+}
+.review-crud-btn {
+  background: none;
+  border: 1px solid var(--line);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--steel);
+  transition: all 0.15s ease;
+}
+.review-crud-btn:hover {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+.review-crud-btn--danger:hover {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+.review-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--paper);
+  border-radius: 4px;
+}
+.review-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Profile — Sections (About, Contact, Drafts, Archive)
+ * --------------------------------------------------------------------------- */
+.profile-bio {
+  margin: 6px 0 0;
+  color: var(--steel);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.profile-section-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 24px;
+}
+.profile-page .profile-section-card {
+  margin-bottom: 0;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-header .section-title {
+  margin-bottom: 0;
+}
+
+/* Contact items */
+.contact-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+/* Draft list */
+.draft-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.draft-item {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.draft-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 12px;
+}
+.draft-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.draft-item-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.draft-item-time {
+  font-size: 0.78rem;
+  color: var(--steel);
+}
+.draft-item-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.draft-preview {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 0.85rem;
+  color: var(--steel);
+}
+.draft-preview p {
+  margin: 0 0 4px;
+}
+
+/* Archive list */
+.archive-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.archive-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.archive-item-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.archive-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.archive-item-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.archive-item-meta {
+  font-size: 0.78rem;
+  color: var(--steel);
+}
+.archive-item-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
