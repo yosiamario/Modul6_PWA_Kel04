@@ -16,6 +16,7 @@ import {
   Clock,
 } from 'lucide-react'
 import userService from '../services/userService'
+import gunService from '../services/gunService'
 import { useFavorites } from '../hooks/useFavorites'
 import { useArchive } from '../hooks/useArchive'
 import {
@@ -71,8 +72,13 @@ export default function ProfilePage({ onReplaySplash, onNavigateEditProfile, onR
     if (restored && onRestoreArchived) onRestoreArchived(restored)
   }
 
-  const handlePermanentDelete = () => {
+  const handlePermanentDelete = async () => {
     if (deleteArchiveTarget) {
+      try {
+        await gunService.deleteGun(deleteArchiveTarget)
+      } catch {
+        /* server unavailable */
+      }
       permanentDelete(deleteArchiveTarget)
       setDeleteArchiveTarget(null)
     }

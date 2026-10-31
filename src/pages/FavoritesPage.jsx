@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Heart, Loader, AlertCircle, ArrowRight } from 'lucide-react'
 import { useFavorites } from '../hooks/useFavorites'
+import { useArchive } from '../hooks/useArchive'
 import { useGuns } from '../hooks/useGuns'
 import GUNS_LOCAL from '../data/guns'
 import GunCard from '../components/gun/GunCard'
@@ -35,6 +36,8 @@ export default function FavoritesPage({ onSelectGun, onNavigateCatalog }) {
     return map
   }, [apiGuns])
 
+  const { isArchived } = useArchive()
+
   // Resolve favorited products
   const favoriteItems = useMemo(() => {
     // 1. If backend returned full objects in favorites array:
@@ -43,10 +46,14 @@ export default function FavoritesPage({ onSelectGun, onNavigateCatalog }) {
 
     favorites.forEach((fav) => {
       const id = fav.id || fav.recipe_id || fav.gun_id
+      if (isArchived(id) || (fav.name && isArchived(fav.name))) return
+
       const match = allKnownGuns.get(id) || allKnownGuns.get(fav.name) || (fav.name ? fav : null)
       if (match && !seen.has(match.id || match.name)) {
-        seen.add(match.id || match.name)
-        resolved.push(match)
+        if (!isArchived(match.id) && !isArchived(match.name)) {
+          seen.add(match.id || match.name)
+          resolved.push(match)
+        }
       } else if (id && !seen.has(id)) {
         seen.add(id)
         resolved.push({
@@ -60,7 +67,7 @@ export default function FavoritesPage({ onSelectGun, onNavigateCatalog }) {
     })
 
     return resolved
-  }, [favorites, allKnownGuns])
+  }, [favorites, allKnownGuns, isArchived])
 
   const isLoading = favLoading && favoriteItems.length === 0
 

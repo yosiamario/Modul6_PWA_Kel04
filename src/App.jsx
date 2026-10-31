@@ -105,19 +105,12 @@ function App() {
     setEditingGun(null)
   }
 
-  // Soft delete → archive item, then optionally delete from server
-  const handleSoftDelete = async (gun) => {
+  // Soft delete → move item to archive
+  const handleSoftDelete = (gun) => {
     if (!gun) return
     try {
       setDeleting(true)
-      // Archive locally first
       archiveItem(gun)
-      // Attempt server delete
-      try {
-        await gunService.deleteGun(gun.id)
-      } catch {
-        /* server unavailable — item is archived locally */
-      }
       invalidateCache('gun')
       setDeleteTarget(null)
       handleBackToList()
