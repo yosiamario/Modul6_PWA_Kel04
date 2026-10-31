@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { RefreshCw, Plus, Loader, AlertCircle, PackageOpen } from 'lucide-react'
 import { useGuns } from '../hooks/useGuns'
-import { useArchive } from '../hooks/useArchive'
+import { useArchive, getRestoredItems } from '../hooks/useArchive'
 import { invalidateCache } from '../utils/queryCache'
 import GUNS_LOCAL from '../data/guns'
 import GunCard from '../components/gun/GunCard'
@@ -26,15 +26,27 @@ export default function Catalog({ onNavigate, cart }) {
   const [useLocal, setUseLocal] = useState(false)
 
   // ---- Soft Delete / Archive ----
-  const { isArchived, archiveItem } = useArchive()
+  const { isArchived, archiveItem, archived } = useArchive()
 
-  // Decide data source
+  // Decide data source & merge restored items
   const rawGuns = useMemo(() => {
+    let base = []
     if (useLocal || (error && apiGuns.length === 0)) {
-      return GUNS_LOCAL.map((g, i) => ({ ...g, id: g.id || `local-${i}` }))
+      base = GUNS_LOCAL.map((g, i) => ({ ...g, id: g.id || `local-${i}` }))
+    } else {
+      base = [...apiGuns]
     }
-    return apiGuns
-  }, [apiGuns, error, useLocal])
+
+    // Merge restored items so they are always visible even if deleted from server
+    const restored = getRestoredItems()
+    restored.forEach((r) => {
+      if (!base.some((b) => String(b.id) === String(r.id) || b.name === r.name)) {
+        base.unshift(r)
+      }
+    })
+
+    return base
+  }, [apiGuns, error, useLocal, archived])
 
   // ---- filters / sort (excluding soft-deleted / archived items) ----
   const [search, setSearch] = useState('')

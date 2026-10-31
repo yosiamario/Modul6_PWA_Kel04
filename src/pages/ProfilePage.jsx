@@ -67,9 +67,14 @@ export default function ProfilePage({ onReplaySplash, onNavigateEditProfile, onR
     setExpandedDraft(null)
   }
 
+  const [toastMessage, setToastMessage] = useState('')
+
   const handleRestoreItem = (gunId) => {
     const restored = restoreItem(gunId)
-    if (restored && onRestoreArchived) onRestoreArchived(restored)
+    if (restored) {
+      setToastMessage(`"${restored.name}" restored to catalog!`)
+      setTimeout(() => setToastMessage(''), 5000)
+    }
   }
 
   const handlePermanentDelete = async () => {
@@ -274,6 +279,30 @@ export default function ProfilePage({ onReplaySplash, onNavigateEditProfile, onR
             </button>
           )}
         </div>
+
+        {toastMessage && (
+          <div
+            className="toast toast--success"
+            style={{
+              marginBottom: '14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span>✓ {toastMessage}</span>
+            {onRestoreArchived && (
+              <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={onRestoreArchived}
+                style={{ marginLeft: '12px' }}
+              >
+                Go to Catalog →
+              </button>
+            )}
+          </div>
+        )}
 
         {archived.length === 0 ? (
           <p className="lede" style={{ fontSize: '0.9rem' }}>
